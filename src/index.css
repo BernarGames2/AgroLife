@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 72 26% 96%;
+    --foreground: 140 24% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 140 24% 12%;
+
+    --primary: 136 40% 33%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 120 22% 93%;
+
+    --muted: 85 16% 94%;
+    --muted-foreground: 135 6% 42%;
+
+    --border: 90 16% 88%;
+    --input: 90 14% 86%;
+    --ring: 136 40% 33%;
+
+    --ok: 136 44% 32%;
+    --ok-bg: 126 33% 94%;
+    --ok-border: 132 30% 79%;
+
+    --warn: 40 60% 30%;
+    --warn-bg: 44 78% 93%;
+    --warn-border: 43 68% 77%;
+
+    --danger: 3 62% 47%;
+    --danger-bg: 3 78% 95%;
+    --danger-border: 3 70% 83%;
+
+    --info: 210 38% 36%;
+    --info-bg: 210 45% 96%;
+    --info-border: 210 36% 85%;
+
+    --target: 43 75% 54%;
+
+    --nav-height: 4.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "ss01";
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl border bg-card text-card-foreground shadow-card;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground;
+  }
+
+  /* Espaço inferior para o conteúdo não ficar escondido sob a barra de navegação */
+  .pb-nav {
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 2rem);
+  }
+
+  .select-chevron {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6b62' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1.1rem;
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

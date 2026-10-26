@@ -1,0 +1,129 @@
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Clock, Gauge, Plus, Sprout, TriangleAlert } from "lucide-react";
+import { buildAlerts, fieldTitle, summarize } from "@/lib/agro";
+import { formatRelativeDateTime } from "@/lib/format";
+import { useAppStore } from "@/store/AppStore";
+import { PageHeader, SectionTitle, TagBadge } from "@/components/PageHeader";
+import { StatCard } from "@/components/StatCard";
+import { FieldCard } from "@/components/FieldCard";
+import { AlertCard } from "@/components/AlertCard";
+import { EmergenceChart } from "@/components/EmergenceChart";
+import { EmptyState } from "@/components/EmptyState";
+import { ButtonLink } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Form";
+
+export default function Dashboard() {
+  const { data } = useAppStore();
+  const fields = useMemo(() => [...data.fields].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")), [data.fields]);
+  const summary = useMemo(() => summarize(fields), [fields]);
+  const alerts = useMemo(() => buildAlerts(fields), [fields]);
+  const [chartFieldId, setChartFieldId] = useState<string>();
+  const chartField = fields.find((f) => f.id === chartFieldId) ?? fields.find((f) => f.readings.length > 0) ?? fields[0];
+  const firstName = data.profile.name.trim().split(/\s+/)[0];
+
+  return (
+    <div className="space-y-10 animate-fade-in">
+      <PageHeader
+        title={firstName ? `Olá, ${firstName}!` : "Olá!"}
+        badge={data.isDemo ? <TagBadge>Demonstração</TagBadge> : undefined}
+        subtitle="Veja como estão seus talhões hoje."
+        actions={
+          <ButtonLink to="/app/talhoes/novo" className="rounded-2xl">
+            <Plus /> Novo talhão
+          </ButtonLink>
+        }
+      />
+
+      {fields.length === 0 ? (
+        <EmptyState
+          icon={Sprout}
+          title="Cadastre seu primeiro talhão"
+          description="Comece pelo talhão que mais preocupa você. Depois, registre as contagens de emergência para receber os pontos de atenção."
+          action={
+            <ButtonLink to="/app/talhoes/novo">
+              <Plus /> Cadastrar talhão
+            </ButtonLink>
+          }
+        />
+      ) : (
+        <>
+          <section className="grid grid-cols-2 gap-4" aria-label="Resumo">
+            <StatCard label="Talhões monitorados" value={String(summary.fieldCount)} icon={Sprout} />
+            <StatCard
+              label="Emergência média"
+              value={summary.averageEmergence === null ? "—" : `${Math.round(summary.averageEmergence)}%`}
+              icon={Gauge}
+            />
+            <StatCard label="Talhões em atenção" value={String(summary.attentionCount)} icon={TriangleAlert} />
+            <StatCard
+              label="Última atualização"
+              value={summary.lastUpdate ? formatRelativeDateTime(summary.lastUpdate) : "—"}
+              icon={Clock}
+              className="[&>p:last-child]:text-[1.6rem] sm:[&>p:last-child]:text-3xl"
+            />
+          </section>
+
+          {chartField && (
+            <section className="card p-5 sm:p-7">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-[1.65rem] font-bold leading-tight">Evolução da emergência</h2>
+                  {fields.length === 1 && (
+                    <p className="mt-1 text-[17px] text-muted-foreground">
+                      <Link to={`/app/talhoes/${chartField.id}`} className="hover:text-foreground hover:underline">
+                        {fieldTitle(chartField)}
+                      </Link>
+                    </p>
+                  )}
+                </div>
+                {fields.length > 1 && (
+                  <Select
+                    aria-label="Escolher talhão do gráfico"
+                    value={chartField.id}
+                    onChange={(e) => setChartFieldId(e.target.value)}
+                    className="h-10 w-auto min-w-40 text-[15px]"
+                  >
+                    {fields.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {fieldTitle(f)}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </div>
+              <div className="mt-5">
+                <EmergenceChart field={chartField} />
+              </div>
+            </section>
+          )}
+
+          <section className="space-y-5">
+            <SectionTitle title="Seus talhões" subtitle="Do dado à decisão, do plantio ao estabelecimento." />
+            <div className="grid gap-4">
+              {fields.map((f) => (
+                <FieldCard key={f.id} field={f} />
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionTitle
+              title="Pontos de atenção"
+              action={
+                <Link to="/app/alertas" className="shrink-0 rounded-full px-1 py-1 text-[17px] font-medium text-foreground hover:text-primary">
+                  Ver todos
+                </Link>
+              }
+            />
+            <div className="grid gap-4">
+              {alerts.slice(0, 3).map((a) => (
+                <AlertCard key={a.id} alert={a} compact />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
