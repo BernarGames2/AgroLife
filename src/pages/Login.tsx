@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, PlayCircle } from "lucide-react";
+import { ArrowLeft, Loader2, PlayCircle } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Card";
@@ -17,25 +17,25 @@ export default function Login() {
   const mode: Mode = params.get("modo") === "cadastro" ? "cadastro" : "entrar";
   const next = safeInternalPath(params.get("next"));
   const navigate = useNavigate();
-  const { data, signIn, signUp, signInDemo } = useAppStore();
+  const { signIn, signUp, signInDemo } = useAppStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [property, setProperty] = useState("");
-  const [withDemoData, setWithDemoData] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const hasOwnData = !data.isDemo && data.fields.length > 0;
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   function switchMode(m: Mode) {
     const p = new URLSearchParams(params);
     p.set("modo", m);
     setParams(p, { replace: true });
     setErrors({});
+    setAuthError(null);
   }
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!EMAIL_RE.test(email.trim())) errs.email = "Informe um e-mail válido.";
@@ -45,11 +45,16 @@ export default function Login() {
       if (!property.trim()) errs.property = "Informe o nome da propriedade.";
     }
     setErrors(errs);
+    setAuthError(null);
     if (Object.keys(errs).length) return;
 
-    // Protótipo: a senha é apenas validada e nunca é armazenada.
-    if (mode === "cadastro") signUp({ email, name, property, withDemoData });
-    else signIn(email);
+    setBusy(true);
+    const error = mode === "cadastro" ? await signUp({ email, password, name, property }) : await signIn(email, password);
+    setBusy(false);
+    if (error) {
+      setAuthError(error);
+      return;
+    }
     navigate(next, { replace: true });
   }
 
@@ -117,28 +122,17 @@ export default function Login() {
                 )}
               </FormField>
 
-              {mode === "cadastro" && (
-                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border bg-muted/50 p-4 text-[15px] leading-snug">
-                  <input
-                    type="checkbox"
-                    checked={withDemoData}
-                    onChange={(e) => setWithDemoData(e.target.checked)}
-                    className="mt-0.5 size-5 shrink-0 accent-[hsl(var(--primary))]"
-                  />
-                  <span>
-                    Começar com talhões de demonstração
-                    <span className="mt-0.5 block text-sm text-muted-foreground">Desmarque para começar com a conta vazia e cadastrar seus próprios talhões.</span>
-                  </span>
-                </label>
+              {authError && (
+                <p role="alert" className="rounded-2xl border border-danger-border bg-danger-bg px-4 py-3 text-[15px] text-danger">
+                  {authError}
+                </p>
               )}
 
-              {mode === "cadastro" && hasOwnData && (
-                <p className="text-sm text-warn">Criar uma conta substitui os talhões salvos neste navegador.</p>
-              )}
-
-              <Button type="submit" size="lg" className="w-full rounded-2xl">
+              <Button type="submit" size="lg" className="w-full rounded-2xl" disabled={busy}>
+                {busy && <Loader2 className="animate-spin" />}
                 {mode === "cadastro" ? "Criar conta" : "Entrar"}
               </Button>
+              {mode === "cadastro" && <p className="text-center text-sm text-muted-foreground">Sua conta começa vazia, pronta para cadastrar seus talhões.</p>}
             </form>
 
             <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground">
@@ -156,10 +150,12 @@ export default function Login() {
             >
               <PlayCircle /> Explorar a demonstração
             </Button>
+            <p className="mt-2 text-center text-sm text-muted-foreground">Dados de exemplo da Fazenda Horizonte, separados da sua conta.</p>
           </div>
 
           <Notice className="mt-5">
-            Protótipo: não há servidor. Os dados ficam apenas neste navegador e a senha não é armazenada — não use a senha de outras contas.
+            Protótipo: não há servidor. A conta e os dados ficam apenas neste aparelho e navegador — para usar em outro aparelho, exporte os
+            dados no perfil. Não use a senha de outras contas.
           </Notice>
         </div>
       </main>

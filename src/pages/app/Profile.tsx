@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Crown, Download, LogOut, RotateCcw, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronRight, Crown, Download, LogOut, RotateCcw, Trash2, Upload } from "lucide-react";
 import type { Profile as ProfileData } from "@/types";
 import { parseAppData } from "@/lib/storage";
 import { plural, toDateInputValue } from "@/lib/format";
@@ -14,8 +14,7 @@ import { ConfirmDialog } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 
 export default function Profile() {
-  const { data, session, persisted, updateProfile, restoreDemo, replaceData, signOut } = useAppStore();
-  const navigate = useNavigate();
+  const { data, session, persisted, isDemoSession, updateProfile, resetData, replaceData, signOut } = useAppStore();
   const toast = useToast();
   const [form, setForm] = useState<ProfileData>(data.profile);
   const [confirmRestore, setConfirmRestore] = useState(false);
@@ -122,16 +121,16 @@ export default function Profile() {
             <Upload /> Importar dados
           </Button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" onChange={(e) => importFile(e.target.files?.[0])} />
-          <Button variant="outline" onClick={() => setConfirmRestore(true)}>
-            <RotateCcw /> Restaurar dados de demonstração
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              signOut();
-              navigate("/", { replace: true });
-            }}
-          >
+          {isDemoSession ? (
+            <Button variant="outline" onClick={() => setConfirmRestore(true)}>
+              <RotateCcw /> Restaurar dados de demonstração
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => setConfirmRestore(true)}>
+              <Trash2 /> Apagar talhões e avaliações
+            </Button>
+          )}
+          <Button variant="danger" onClick={signOut}>
             <LogOut /> Sair
           </Button>
         </div>
@@ -142,18 +141,27 @@ export default function Profile() {
           </p>
         )}
 
-        <Notice>Protótipo: os dados desta conta ficam apenas neste navegador. Use “Exportar dados” para guardar uma cópia ou levar para outro aparelho.</Notice>
+        <Notice>
+          {isDemoSession
+            ? "Você está na demonstração: os dados são de exemplo e ficam separados das contas criadas neste aparelho."
+            : "Protótipo: os dados desta conta ficam apenas neste navegador. Use “Exportar dados” para guardar uma cópia ou levar para outro aparelho."}
+        </Notice>
       </Card>
 
       <ConfirmDialog
         open={confirmRestore}
-        title="Restaurar dados de demonstração?"
-        description="Os talhões e avaliações atuais serão substituídos pelos dados da Fazenda Horizonte. Exporte seus dados antes, se quiser guardá-los."
-        confirmLabel="Restaurar"
+        title={isDemoSession ? "Restaurar dados de demonstração?" : "Apagar talhões e avaliações?"}
+        description={
+          isDemoSession
+            ? "Os dados de exemplo da Fazenda Horizonte voltam ao estado inicial."
+            : "Todos os talhões, avaliações, análises e pedidos à equipe KP desta conta serão apagados. Seu perfil e seu plano continuam. Exporte seus dados antes, se quiser guardá-los."
+        }
+        confirmLabel={isDemoSession ? "Restaurar" : "Apagar"}
+        tone={isDemoSession ? "primary" : "danger"}
         onClose={() => setConfirmRestore(false)}
         onConfirm={() => {
-          restoreDemo();
-          toast("Dados de demonstração restaurados");
+          resetData();
+          toast(isDemoSession ? "Dados de demonstração restaurados" : "Talhões e avaliações apagados");
         }}
       />
       <ConfirmDialog

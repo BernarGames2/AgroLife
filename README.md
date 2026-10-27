@@ -4,7 +4,7 @@
 
 Plataforma de monitoramento e apoio à decisão para acompanhar o **estabelecimento da lavoura**: registre contagens de emergência por talhão, compare com a meta e receba pontos de atenção com ações sugeridas.
 
-Protótipo em fase de validação: não há servidor. Os dados ficam no navegador (`localStorage`) e podem ser exportados e importados em JSON pela tela de perfil.
+Protótipo em fase de validação: não há servidor. As contas e os dados ficam no navegador (`localStorage`), separados por conta, e podem ser exportados e importados em JSON pela tela de perfil. A senha não é guardada: só um hash PBKDF2 com sal, usado para conferir o acesso.
 
 ## Funcionalidades
 
@@ -12,7 +12,7 @@ Protótipo em fase de validação: não há servidor. Os dados ficam no navegado
 | --- | --- |
 | **Início** (`/`) | Apresentação, como funciona e chamada para cadastro. |
 | **Planos** (`/planos`) | Planos da fase de validação e perguntas frequentes. |
-| **Entrar** (`/entrar`) | Entrar, criar conta (com ou sem dados de demonstração) ou explorar a demonstração. |
+| **Entrar** (`/entrar`) | Entrar, criar conta (sempre começa vazia) ou explorar a demonstração, que tem dados separados. |
 | **Dashboard** (`/app`) | Resumo da propriedade, gráfico de evolução por talhão, talhões e pontos de atenção. |
 | **Talhões** (`/app/talhoes`) | Busca, filtro por status e ordenação por nome ou prioridade. |
 | **Detalhe do talhão** | Emergência atual, estande estimado (plantas/ha), alertas, gráfico com a meta, histórico de avaliações e análises de foto. |
@@ -70,7 +70,7 @@ npm run preview    # serve o build localmente
 
 ### Publicação
 
-O app é uma SPA com rotas no navegador (`BrowserRouter`). Ao publicar em hospedagem estática, configure o *fallback* de todas as rotas para `index.html`. Sem isso, abrir `/app` diretamente retorna 404.
+O app é uma SPA com rotas no navegador (`BrowserRouter`). Na Vercel, o `vercel.json` já direciona todas as rotas para `index.html`. Em outra hospedagem estática, configure o mesmo *fallback*; sem ele, abrir `/app` diretamente retorna 404.
 
 ## Estrutura
 

@@ -1,14 +1,29 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AppData, Field, FieldInput, KpRequest, PhotoAnalysis, Plan, Profile, Reading, Session } from "@/types";
-import { createDemoData, createEmptyData, DEMO_EMAIL, DEMO_PROFILE } from "@/lib/demo";
-import { loadData, loadSession, saveData, saveSession } from "@/lib/storage";
+import { createDemoData, createEmptyData, DEMO_EMAIL } from "@/lib/demo";
+import { findAccount, hashPassword, normalizeEmail, saveAccount, verifyPassword } from "@/lib/accounts";
+import { loadData, loadSession, migrateLegacyData, saveData, saveSession } from "@/lib/storage";
 import { createId } from "@/lib/utils";
 
 interface SignUpInput {
   email: string;
+  password: string;
   name: string;
   property: string;
-  withDemoData: boolean;
+}
+
+/** Resultado de entrar ou criar conta: null quando deu certo, ou a mensagem de erro. */
+type AuthResult = Promise<string | null>;
+
+const BLANK_PROFILE: Profile = { name: "", property: "", crops: "", location: "" };
+
+function dataFor(session: Session | null): AppData {
+  if (!session) return createEmptyData(BLANK_PROFILE);
+  const stored = loadData(session.email);
+  if (stored) return stored;
+  if (session.email === DEMO_EMAIL) return createDemoData();
+  const account = findAccount(session.email);
+  return createEmptyData({ ...BLANK_PROFILE, name: account?.name ?? "" });
 }
 
 interface AppStore {
@@ -16,8 +31,11 @@ interface AppStore {
   session: Session | null;
   /** Falso quando o navegador não permitiu salvar (ex.: armazenamento cheio). */
   persisted: boolean;
-  signIn: (email: string) => void;
-  signUp: (input: SignUpInput) => void;
+  isDemoSession: boolean;
+  /** Verdadeiro logo após "Sair", para voltar à página inicial em vez da tela de entrar. */
+  signedOut: boolean;
+  signIn: (email: string, password: string) => AuthResult;
+  signUp: (input: SignUpInput) => AuthResult;
   signInDemo: () => void;
   signOut: () => void;
   updateProfile: (profile: Profile) => void;
@@ -28,7 +46,8 @@ interface AppStore {
   deleteReading: (fieldId: string, readingId: string) => void;
   addAnalysis: (analysis: Omit<PhotoAnalysis, "id">) => void;
   deleteAnalysis: (id: string) => void;
-  restoreDemo: () => void;
+  /** Na demonstração, recria os dados de exemplo; numa conta, apaga talhões, avaliações e análises. */
+  resetData: () => void;
   replaceData: (data: AppData) => void;
   setPlan: (plan: Plan) => void;
   toggleChecklistItem: (id: string) => void;
@@ -41,20 +60,27 @@ interface AppStore {
 const AppStoreContext = createContext<AppStore | null>(null);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AppData>(() => loadData() ?? createDemoData());
-  const [session, setSession] = useState<Session | null>(() => loadSession());
+  const [session, setSession] = useState<Session | null>(() => {
+    migrateLegacyData();
+    return loadSession();
+  });
+  const [data, setData] = useState<AppData>(() => dataFor(session));
   const [persisted, setPersisted] = useState(true);
+  const [signedOut, setSignedOut] = useState(false);
 
+  // Os dados são salvos sempre na conta conectada; sem sessão, nada é salvo.
   useEffect(() => {
-    setPersisted(saveData(data));
-  }, [data]);
+    if (session) setPersisted(saveData(session.email, data));
+  }, [data, session]);
 
   useEffect(() => {
     saveSession(session);
   }, [session]);
 
-  const startSession = useCallback((email: string) => {
-    setSession({ email: email.trim().toLowerCase(), signedInAt: new Date().toISOString() });
+  const startSession = useCallback((email: string, next: AppData) => {
+    setSignedOut(false);
+    setData(next);
+    setSession({ email: normalizeEmail(email), signedInAt: new Date().toISOString() });
   }, []);
 
   const updateFields = useCallback((fn: (fields: Field[]) => Field[]) => {
@@ -66,22 +92,32 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       data,
       session,
       persisted,
-      signIn: (email) => startSession(email),
-      signUp: ({ email, name, property, withDemoData }) => {
-        const profile: Profile = {
-          name: name.trim(),
-          property: property.trim(),
-          crops: withDemoData ? DEMO_PROFILE.crops : "",
-          location: withDemoData ? DEMO_PROFILE.location : "",
-        };
-        setData(withDemoData ? createDemoData(new Date(), profile) : createEmptyData(profile));
-        startSession(email);
+      isDemoSession: session?.email === DEMO_EMAIL,
+      signedOut,
+      signIn: async (email, password) => {
+        const account = findAccount(email);
+        if (!account) return "Não encontramos uma conta com esse e-mail neste aparelho. Crie uma conta ou explore a demonstração.";
+        if (!(await verifyPassword(password, account))) return "Senha incorreta.";
+        // Contas da versão anterior não tinham senha: a primeira entrada define a senha.
+        if (!account.hash) saveAccount({ ...account, ...(await hashPassword(password)) });
+        startSession(account.email, dataFor({ email: account.email, signedInAt: "" }));
+        return null;
       },
-      signInDemo: () => {
-        setData(createDemoData());
-        startSession(DEMO_EMAIL);
+      signUp: async ({ email, password, name, property }) => {
+        const normalized = normalizeEmail(email);
+        if (normalized === DEMO_EMAIL) return "Esse e-mail é usado pela demonstração. Use outro e-mail.";
+        if (findAccount(normalized)) return "Já existe uma conta com esse e-mail neste aparelho. Use a aba Entrar.";
+        saveAccount({ email: normalized, name: name.trim(), createdAt: new Date().toISOString(), ...(await hashPassword(password)) });
+        // Conta nova começa sempre vazia, só com o nome e a propriedade.
+        startSession(normalized, createEmptyData({ ...BLANK_PROFILE, name: name.trim(), property: property.trim() }));
+        return null;
       },
-      signOut: () => setSession(null),
+      signInDemo: () => startSession(DEMO_EMAIL, createDemoData()),
+      signOut: () => {
+        setSignedOut(true);
+        setSession(null);
+        setData(createEmptyData(BLANK_PROFILE));
+      },
       updateProfile: (profile) => setData((d) => ({ ...d, profile })),
       addField: (input) => {
         const field: Field = { ...input, id: createId(), createdAt: new Date().toISOString(), readings: [] };
@@ -107,14 +143,12 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       addAnalysis: (analysis) =>
         setData((d) => ({ ...d, analyses: [{ ...analysis, id: createId() }, ...d.analyses].slice(0, 30) })),
       deleteAnalysis: (id) => setData((d) => ({ ...d, analyses: d.analyses.filter((a) => a.id !== id) })),
-      restoreDemo: () =>
-        setData((d) => ({
-          ...createDemoData(),
-          profile: d.isDemo ? DEMO_PROFILE : d.profile,
-          plan: d.plan,
-          checklist: d.checklist,
-          kpRequests: d.kpRequests,
-        })),
+      resetData: () =>
+        setData((d) =>
+          session?.email === DEMO_EMAIL
+            ? { ...createDemoData(), plan: d.plan }
+            : { ...createEmptyData(d.profile), plan: d.plan, checklist: d.checklist },
+        ),
       replaceData: (next) => setData(next),
       setPlan: (plan) => setData((d) => ({ ...d, plan })),
       toggleChecklistItem: (id) =>
@@ -132,7 +166,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         setData((d) => ({ ...d, kpRequests: d.kpRequests.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
       deleteKpRequest: (id) => setData((d) => ({ ...d, kpRequests: d.kpRequests.filter((r) => r.id !== id) })),
     }),
-    [data, session, persisted, startSession, updateFields],
+    [data, session, persisted, signedOut, startSession, updateFields],
   );
 
   return <AppStoreContext.Provider value={store}>{children}</AppStoreContext.Provider>;

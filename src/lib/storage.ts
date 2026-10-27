@@ -1,8 +1,16 @@
 import type { AppData, Field, KpRequest, PhotoAnalysis, Plan, Reading, Session } from "@/types";
 import { isHttpUrl } from "@/lib/video";
+import { createEmptyData, DEMO_EMAIL } from "@/lib/demo";
+import { findAccount, normalizeEmail, saveAccount } from "@/lib/accounts";
 
-const DATA_KEY = "agrolife:data:v1";
+/** Versão antiga: um único conjunto de dados para o navegador inteiro. */
+const LEGACY_DATA_KEY = "agrolife:data:v1";
 const SESSION_KEY = "agrolife:session:v1";
+
+/** Cada conta (e a demonstração) tem os próprios dados. */
+function dataKey(email: string): string {
+  return `${LEGACY_DATA_KEY}:${normalizeEmail(email)}`;
+}
 
 function read(key: string): unknown {
   try {
@@ -24,12 +32,29 @@ function write(key: string, value: unknown): boolean {
   }
 }
 
-export function loadData(): AppData | null {
-  return parseAppData(read(DATA_KEY));
+export function loadData(email: string): AppData | null {
+  return parseAppData(read(dataKey(email)));
 }
 
-export function saveData(data: AppData): boolean {
-  return write(DATA_KEY, data);
+export function saveData(email: string, data: AppData): boolean {
+  return write(dataKey(email), data);
+}
+
+/**
+ * Move os dados da versão antiga para a conta conectada. Dados de demonstração
+ * não são levados para uma conta real: ela começa vazia, mantendo o nome.
+ */
+export function migrateLegacyData(): void {
+  const raw = read(LEGACY_DATA_KEY);
+  if (raw === null) return;
+  const legacy = parseAppData(raw);
+  const session = loadSession();
+  if (legacy && session && session.email !== DEMO_EMAIL && read(dataKey(session.email)) === null) {
+    const { name, property } = legacy.profile;
+    saveData(session.email, legacy.isDemo ? createEmptyData({ name, property, crops: "", location: "" }) : legacy);
+    if (!findAccount(session.email)) saveAccount({ email: session.email, name, createdAt: new Date().toISOString() });
+  }
+  write(LEGACY_DATA_KEY, null);
 }
 
 export function loadSession(): Session | null {
