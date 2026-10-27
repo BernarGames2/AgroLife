@@ -8,8 +8,10 @@ import {
   LayoutDashboard,
   ListChecks,
   Map,
+  Sparkles,
   Sprout,
   UserRound,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,8 +34,10 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/app/comparar", label: "Comparar", icon: ArrowLeftRight, description: "Talhões lado a lado" },
   { to: "/app/relatorios", label: "Relatórios", icon: FileText, description: "Imprimir e compartilhar" },
   { to: "/app/academy", label: "Academy", icon: BookOpen, description: "Conteúdos rápidos" },
+  { to: "/app/kp", label: "Equipe KP", icon: Video, description: "Vídeos e consultoria" },
+  { to: "/app/premium", label: "Análises Premium", icon: Sparkles, description: "Correção, falhas e tendência" },
   { to: "/app/perfil", label: "Meu perfil", icon: UserRound, description: "Conta e dados" },
-  { to: "/app/premium", label: "Premium e Plus", icon: Crown, description: "Recursos avançados" },
+  { to: "/app/planos", label: "Planos", icon: Crown, description: "Gratuito, Plus e Premium" },
 ];
 
 /** Itens fixos da barra inferior do celular; os demais ficam em "Mais". */

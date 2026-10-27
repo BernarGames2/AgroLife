@@ -65,7 +65,7 @@ export function AppLayout() {
               <Icon className="size-5" strokeWidth={1.9} aria-hidden />
               {label}
               {to === "/app/alertas" && <CountBadge count={alertCount} className="ml-auto" />}
-              {to === "/app/premium" && data.plan !== "gratuito" && (
+              {to === "/app/planos" && data.plan !== "gratuito" && (
                 <span className="ml-auto size-2.5 shrink-0 rounded-full bg-primary" title="Plano ativo" aria-label="plano ativo" />
               )}
             </NavLink>

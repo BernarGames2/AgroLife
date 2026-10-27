@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Crown } from "lucide-react";
 import { MORE_ITEMS } from "@/lib/navigation";
+import { formatPrice, PLANS, PRICE_PERIOD } from "@/lib/plans";
 import { useAppStore } from "@/store/AppStore";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
@@ -8,23 +9,25 @@ import { cn } from "@/lib/utils";
 /** Todas as seções que não cabem na barra inferior do celular. */
 export default function More() {
   const { data } = useAppStore();
-  const tools = MORE_ITEMS.filter((i) => i.to !== "/app/premium");
+  const tools = MORE_ITEMS.filter((i) => i.to !== "/app/planos");
 
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Mais" subtitle="Todas as ferramentas do AgroLife." />
 
       <Link
-        to="/app/premium"
+        to="/app/planos"
         className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[hsl(140_42%_26%)] to-[hsl(122_38%_42%)] p-5 text-white shadow-card"
       >
         <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15">
           <Crown className="size-6" aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-lg font-semibold">Premium e Plus</span>
+          <span className="block text-lg font-semibold">Planos Plus e Premium</span>
           <span className="block text-sm text-white/85">
-            {data.plan === "gratuito" ? "Recursos avançados e acompanhamento da equipe KP" : `Plano ${data.plan === "plus" ? "Premium Plus" : "Premium"} ativo`}
+            {data.plan === "gratuito"
+              ? `Vídeos e consultoria da equipe KP a partir de ${formatPrice(PLANS.plus.price)}/${PRICE_PERIOD}`
+              : `Seu plano: ${PLANS[data.plan].name}`}
           </span>
         </span>
         <ChevronRight className="size-5 shrink-0" aria-hidden />

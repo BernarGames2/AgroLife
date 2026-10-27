@@ -25,7 +25,9 @@ Protótipo em fase de validação: não há servidor. Os dados ficam no navegado
 | **Comparar** (`/app/comparar`) | Evolução da emergência por dias após o plantio e tabela de indicadores lado a lado. |
 | **Relatórios** (`/app/relatorios`) | Relatório por talhão para imprimir/salvar em PDF ou compartilhar o resumo (WhatsApp, e-mail). |
 | **Academy** (`/app/academy`) | Conteúdos curtos por etapa: antes, durante e após o plantio e monitoramento. |
-| **Premium e Plus** (`/app/premium`) | Ativação em modo de demonstração dos recursos avançados e do acompanhamento presencial. |
+| **Equipe KP** (`/app/kp`) | Pedido de vídeo personalizado (Plus) ou consultoria presencial (Premium), enviado pelo WhatsApp; o vídeo recebido aparece no pedido e no talhão. |
+| **Análises Premium** (`/app/premium`) | Plano de correção do solo, falhas e replantio, tendência, prioridade de vistoria, cronograma e relatório (Premium). |
+| **Planos** (`/app/planos`) | Plano atual e assinatura em modo de demonstração. |
 | **Perfil** (`/app/perfil`) | Dados do produtor, plano atual, exportar/importar dados, restaurar demonstração e sair. |
 | **Mais** (`/app/mais`) | No celular, reúne todas as seções que não cabem na barra inferior. |
 
@@ -33,40 +35,15 @@ No computador, todas as seções ficam no menu lateral. No celular, a barra infe
 
 ### Planos
 
-| Plano | Recursos |
-| --- | --- |
-| **Gratuito** | Tudo o que está descrito acima. |
-| **Premium** | Plano de correção do solo, estimativa de falhas e replantio, tendência da emergência (2 dias), prioridade de vistoria, cronograma de ações e relatório Premium. |
-| **Premium Plus** | Tudo do Premium + acompanhamento presencial da equipe KP (visitas, avaliação de estande e solo, apoio na regulagem, relatório da visita). |
+| Plano | Preço | Recursos |
+| --- | --- | --- |
+| **Gratuito** | Grátis | Tudo o que está descrito acima. |
+| **Plus** | R$ 19,90/mês | Tudo do Gratuito + vídeos personalizados da equipe KP: o produtor conta o que está acontecendo e recebe um vídeo. |
+| **Premium** | R$ 25,90/mês | Tudo do Plus + consultoria presencial da equipe KP e Análises Premium. |
 
-Os preços do Premium e do Premium Plus ainda não foram definidos. No protótipo, a ativação é apenas demonstrativa (`src/lib/premium.ts`).
+Planos, preços e recursos ficam em `src/lib/plans.ts`. No protótipo não há pagamento: a assinatura é ativada apenas em modo de demonstração.
 
-### Regras de classificação
-
-A classificação compara a última avaliação com a meta do talhão (`src/lib/agro.ts`):
-
-| Diferença para a meta | Status |
-| --- | --- |
-| até 3 p.p. abaixo (ou acima) | 🟢 Dentro do esperado |
-| de 4 a 10 p.p. abaixo | 🟡 Atenção |
-| mais de 10 p.p. abaixo | 🔴 Investigar |
-
-Alertas complementares:
-
-- **Estande desuniforme**: coeficiente de variação acima de 20% entre os pontos de contagem.
-- **Emergência estabilizada abaixo da meta**: menos de 1 p.p. de avanço entre as duas últimas avaliações.
-- **Avaliação desatualizada**: mais de 7 dias sem avaliação durante os primeiros 35 dias após o plantio.
-
-**Cálculos:**
-
-- Emergência (%) = plantas contadas ÷ metros avaliados ÷ sementes por metro × 100.
-- Estande (plantas/ha) = sementes por metro × (10.000 ÷ espaçamento em m) × emergência.
-
-### Análise por foto
-
-A análise roda no próprio navegador, sem enviar a foto para nenhum servidor. Ela usa o índice *Excess Green* (ExG = 2g − r − b) para separar vegetação de solo. Depois divide a imagem em uma grade e destaca as células com menos da metade da cobertura típica da foto. É uma estimativa sensível a sombras, palhada e iluminação: serve de apoio e não é um diagnóstico.
-
-> Os alertas e análises são indicativos e não substituem a avaliação de um profissional qualificado.
+Os pedidos à equipe KP são enviados pelo WhatsApp. Para que eles cheguem direto ao número da KP, preencha `KP_WHATSAPP` em `src/lib/config.ts`. Quando a KP enviar o vídeo, o produtor cola o link (YouTube, Google Drive, Vimeo ou arquivo de vídeo) no pedido e o vídeo passa a aparecer no app. Para a KP publicar os vídeos direto no app, será preciso um servidor.
 
 ## Tecnologias
 
@@ -102,7 +79,10 @@ src/
   components/      componentes de interface (layouts, cartões, gráfico, ui/)
   lib/
     agro.ts        status, alertas e cálculos agronômicos
-    premium.ts     recursos do plano Premium
+    plans.ts       planos, preços e recursos
+    premium.ts     Análises Premium
+    kp.ts          pedidos à equipe KP
+    video.ts       leitura de links de vídeo
     content.ts     checklist de plantio e artigos do Academy
     treemap.ts     layout do mapa ilustrativo
     demo.ts        dados de demonstração (Fazenda Horizonte)

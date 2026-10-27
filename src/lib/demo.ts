@@ -122,9 +122,10 @@ export function createDemoData(now: Date = new Date(), profile: Profile = DEMO_P
     isDemo: true,
     plan: "gratuito",
     checklist: [],
+    kpRequests: [],
   };
 }
 
 export function createEmptyData(profile: Profile): AppData {
-  return { version: 1, profile: { ...profile }, fields: [], analyses: [], isDemo: false, plan: "gratuito", checklist: [] };
+  return { version: 1, profile: { ...profile }, fields: [], analyses: [], isDemo: false, plan: "gratuito", checklist: [], kpRequests: [] };
 }

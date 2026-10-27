@@ -67,7 +67,33 @@ export interface PhotoAnalysis {
   notes?: string;
 }
 
-export type Plan = "gratuito" | "premium" | "plus";
+/** Gratuito < Plus (vídeos da equipe KP) < Premium (consultoria presencial e análises). */
+export type Plan = "gratuito" | "plus" | "premium";
+
+export type KpRequestType = "video" | "consultoria";
+
+/** Pedido feito à equipe KP: vídeo personalizado (Plus) ou consultoria presencial (Premium). */
+export interface KpRequest {
+  id: string;
+  type: KpRequestType;
+  createdAt: string;
+  fieldId?: string;
+  /** O que está acontecendo, nas palavras do produtor. */
+  message: string;
+  /** Foto reduzida (data URL JPEG). */
+  photo?: string;
+  /** Telefone para contato (consultoria). */
+  phone?: string;
+  /** Melhor período para a visita (consultoria). */
+  preferredPeriod?: string;
+  /** Quando o pedido foi enviado à KP (pelo WhatsApp ou compartilhamento). */
+  sentAt?: string;
+  /** Link do vídeo recebido da KP. */
+  videoUrl?: string;
+  /** Data combinada para a visita. */
+  scheduledFor?: string;
+  completedAt?: string;
+}
 
 export interface AppData {
   version: 1;
@@ -80,4 +106,5 @@ export interface AppData {
   plan: Plan;
   /** Itens marcados no checklist de plantio. */
   checklist: string[];
+  kpRequests: KpRequest[];
 }

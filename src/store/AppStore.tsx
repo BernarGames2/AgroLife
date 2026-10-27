@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AppData, Field, FieldInput, PhotoAnalysis, Plan, Profile, Reading, Session } from "@/types";
+import type { AppData, Field, FieldInput, KpRequest, PhotoAnalysis, Plan, Profile, Reading, Session } from "@/types";
 import { createDemoData, createEmptyData, DEMO_EMAIL, DEMO_PROFILE } from "@/lib/demo";
 import { loadData, loadSession, saveData, saveSession } from "@/lib/storage";
 import { createId } from "@/lib/utils";
@@ -33,6 +33,9 @@ interface AppStore {
   setPlan: (plan: Plan) => void;
   toggleChecklistItem: (id: string) => void;
   resetChecklist: () => void;
+  addKpRequest: (request: Omit<KpRequest, "id" | "createdAt">) => KpRequest;
+  updateKpRequest: (id: string, patch: Partial<Omit<KpRequest, "id">>) => void;
+  deleteKpRequest: (id: string) => void;
 }
 
 const AppStoreContext = createContext<AppStore | null>(null);
@@ -91,6 +94,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           ...d,
           fields: d.fields.filter((f) => f.id !== id),
           analyses: d.analyses.map((a) => (a.fieldId === id ? { ...a, fieldId: undefined } : a)),
+          kpRequests: d.kpRequests.map((r) => (r.fieldId === id ? { ...r, fieldId: undefined } : r)),
         })),
       addReading: (fieldId, reading) =>
         updateFields((fields) =>
@@ -104,7 +108,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         setData((d) => ({ ...d, analyses: [{ ...analysis, id: createId() }, ...d.analyses].slice(0, 30) })),
       deleteAnalysis: (id) => setData((d) => ({ ...d, analyses: d.analyses.filter((a) => a.id !== id) })),
       restoreDemo: () =>
-        setData((d) => ({ ...createDemoData(), profile: d.isDemo ? DEMO_PROFILE : d.profile, plan: d.plan, checklist: d.checklist })),
+        setData((d) => ({
+          ...createDemoData(),
+          profile: d.isDemo ? DEMO_PROFILE : d.profile,
+          plan: d.plan,
+          checklist: d.checklist,
+          kpRequests: d.kpRequests,
+        })),
       replaceData: (next) => setData(next),
       setPlan: (plan) => setData((d) => ({ ...d, plan })),
       toggleChecklistItem: (id) =>
@@ -113,6 +123,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           checklist: d.checklist.includes(id) ? d.checklist.filter((c) => c !== id) : [...d.checklist, id],
         })),
       resetChecklist: () => setData((d) => ({ ...d, checklist: [] })),
+      addKpRequest: (input) => {
+        const request: KpRequest = { ...input, id: createId(), createdAt: new Date().toISOString() };
+        setData((d) => ({ ...d, kpRequests: [request, ...d.kpRequests] }));
+        return request;
+      },
+      updateKpRequest: (id, patch) =>
+        setData((d) => ({ ...d, kpRequests: d.kpRequests.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
+      deleteKpRequest: (id) => setData((d) => ({ ...d, kpRequests: d.kpRequests.filter((r) => r.id !== id) })),
     }),
     [data, session, persisted, startSession, updateFields],
   );

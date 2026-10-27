@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Camera, ClipboardPlus, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, ClipboardPlus, Crown, Pencil, Trash2, Video } from "lucide-react";
 import {
   buildFieldAlerts,
   compareAlerts,
@@ -22,6 +22,9 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import { VideoPlayer } from "@/components/VideoPlayer";
+import { KP_TYPE_LABEL, kpRequestStatus } from "@/lib/kp";
+import { formatPrice, hasPlan, PLANS, PRICE_PERIOD } from "@/lib/plans";
 import NotFound from "@/pages/NotFound";
 
 function Info({ label, value }: { label: string; value: string }) {
@@ -52,6 +55,8 @@ export default function FieldDetail() {
   const stand =
     last && field.seedsPerMeter && field.rowSpacingCm ? plantsPerHectare(field.seedsPerMeter, field.rowSpacingCm, last.emergence) : null;
   const analyses = data.analyses.filter((a) => a.fieldId === field.id);
+  const kpRequests = data.kpRequests.filter((r) => r.fieldId === field.id);
+  const hasKp = hasPlan(data.plan, "plus");
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -186,6 +191,41 @@ export default function FieldDetail() {
           </ul>
         </section>
       )}
+
+      {/* Equipe KP: vídeos e consultoria deste talhão */}
+      <section className="card p-5 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-bold">Equipe KP</h2>
+            <p className="mt-1 text-muted-foreground">
+              {hasKp ? "Vídeos e consultorias sobre este talhão." : "Receba um vídeo personalizado sobre este talhão."}
+            </p>
+          </div>
+          {hasKp ? (
+            <ButtonLink to={`/app/kp?talhao=${field.id}`} variant="outline">
+              <Video /> Pedir à equipe KP
+            </ButtonLink>
+          ) : (
+            <ButtonLink to="/app/planos" variant="outline">
+              <Crown /> Plus por {formatPrice(PLANS.plus.price)}/{PRICE_PERIOD}
+            </ButtonLink>
+          )}
+        </div>
+        {hasKp && kpRequests.length > 0 && (
+          <ul className="mt-4 space-y-4">
+            {kpRequests.map((r) => (
+              <li key={r.id} className="space-y-2 rounded-2xl border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold">{KP_TYPE_LABEL[r.type]}</p>
+                  <span className="text-sm text-muted-foreground">{kpRequestStatus(r).label}</span>
+                </div>
+                <p className="line-clamp-2 text-[15px] text-muted-foreground">{r.message}</p>
+                {r.videoUrl && <VideoPlayer url={r.videoUrl} title={`Vídeo da equipe KP — ${field.name}`} />}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* Dados do talhão */}
       <section className="card p-5 sm:p-7">

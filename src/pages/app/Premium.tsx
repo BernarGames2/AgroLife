@@ -1,25 +1,16 @@
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { CalendarClock, Check, ClipboardList, Crown, Lock, Printer, Shovel, Sprout, TrendingUp, UsersRound, type LucideIcon } from "lucide-react";
+import { CalendarClock, Check, ClipboardList, Crown, Lock, Printer, Shovel, Sparkles, Sprout, TrendingUp, Video, type LucideIcon } from "lucide-react";
 import type { Field } from "@/types";
 import { fieldStatus, latestReading } from "@/lib/agro";
 import { formatInt, formatShortDate } from "@/lib/format";
 import { actionSchedule, correctionPlan, estimateGaps, inspectionPriority, projectEmergence, type ReplantAdvice } from "@/lib/premium";
+import { formatPrice, hasPlan, PLANS, PRICE_PERIOD } from "@/lib/plans";
 import { useAppStore } from "@/store/AppStore";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TagBadge } from "@/components/PageHeader";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Card";
-import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
-
-const PLUS_BENEFITS = [
-  "Visitas técnicas presenciais da equipe KP aos talhões",
-  "Avaliação de estande e solo feita no campo",
-  "Apoio na regulagem da plantadeira",
-  "Relatório da visita com recomendações",
-  "Contato direto com a equipe KP",
-];
 
 const ADVICE: Record<ReplantAdvice, { label: string; className: string }> = {
   adequado: { label: "Estande adequado", className: "border-ok-border bg-ok-bg text-ok" },
@@ -77,9 +68,8 @@ function Empty({ children }: { children: ReactNode }) {
 }
 
 export default function Premium() {
-  const { data, setPlan } = useAppStore();
-  const toast = useToast();
-  const unlocked = data.plan !== "gratuito";
+  const { data } = useAppStore();
+  const unlocked = hasPlan(data.plan, "premium");
   const fields = useMemo(() => [...data.fields].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { numeric: true })), [data.fields]);
   const attention = fields.filter((f) => {
     const s = fieldStatus(f);
@@ -87,35 +77,26 @@ export default function Premium() {
   });
   const priority = useMemo(() => inspectionPriority(fields), [fields]);
 
-  const activate = (plan: "premium" | "plus") => {
-    setPlan(plan);
-    toast(plan === "plus" ? "Premium Plus ativado (demonstração)" : "Premium ativado (demonstração)");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Destaque do plano */}
       <section className="rounded-3xl bg-gradient-to-br from-[hsl(140_45%_24%)] via-[hsl(134_42%_32%)] to-[hsl(120_40%_42%)] p-6 text-white shadow-card sm:p-8 print:bg-none print:p-0 print:text-foreground print:shadow-none">
-        <Crown className="size-8" strokeWidth={1.8} aria-hidden />
-        <h1 className="mt-3 text-[1.9rem] font-extrabold leading-tight sm:text-4xl">AgroLife Premium</h1>
+        <Sparkles className="size-8" strokeWidth={1.8} aria-hidden />
+        <h1 className="mt-3 text-[1.9rem] font-extrabold leading-tight sm:text-4xl">Análises Premium</h1>
         <p className="mt-1.5 text-[17px] text-white/85 print:text-muted-foreground">Todos os recursos avançados em um só lugar. Do dado à decisão.</p>
         <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden">
           {unlocked ? (
-            <>
-              <span className="inline-flex h-10 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-semibold">
-                <Check className="size-4" aria-hidden /> {data.plan === "plus" ? "Premium Plus ativo" : "Premium ativo"} (demonstração)
-              </span>
-              <button onClick={() => setPlan("gratuito")} className="text-sm text-white/80 underline-offset-4 hover:underline">
-                Voltar ao plano gratuito
-              </button>
-            </>
+            <span className="inline-flex h-10 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-semibold">
+              <Check className="size-4" aria-hidden /> Incluído no seu plano Premium
+            </span>
           ) : (
             <>
-              <Button variant="light" onClick={() => activate("premium")}>
-                Ativar Premium (demonstração)
-              </Button>
-              <span className="text-sm text-white/80">Preço: em breve</span>
+              <ButtonLink to="/app/planos" variant="light">
+                <Crown /> Assinar Premium
+              </ButtonLink>
+              <span className="text-sm text-white/85">
+                {formatPrice(PLANS.premium.price)}/{PRICE_PERIOD} · inclui vídeos e consultoria presencial da equipe KP
+              </span>
             </>
           )}
         </div>
@@ -300,39 +281,26 @@ export default function Premium() {
         </Button>
       </Feature>
 
-      {/* Premium Plus */}
-      <section className={cn("card border-2 p-5 sm:p-7 print:hidden", data.plan === "plus" ? "border-primary/50" : "border-primary/25")}>
-        <div className="flex flex-wrap items-center gap-2">
-          <UsersRound className="size-6 text-primary" strokeWidth={1.9} aria-hidden />
-          <h2 className="text-2xl font-bold">AgroLife Premium Plus</h2>
-          <TagBadge>Demonstração</TagBadge>
-        </div>
-        <p className="mt-2 text-[15px] text-muted-foreground">Tudo do Premium + acompanhamento presencial da equipe KP na sua propriedade.</p>
-        <ul className="mt-4 space-y-2">
-          {PLUS_BENEFITS.map((b) => (
-            <li key={b} className="flex gap-2.5 text-[15px]">
-              <Check className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-              {b}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {data.plan === "plus" ? (
-            <p className="rounded-2xl border border-ok-border bg-ok-bg px-4 py-3 text-[15px] text-ok">
-              Premium Plus ativo (demonstração). Na versão final, as visitas da equipe KP serão agendadas por aqui.
-            </p>
-          ) : (
-            <>
-              <Button onClick={() => activate("plus")}>Ativar Premium Plus (demonstração)</Button>
-              <span className="text-sm text-muted-foreground">Preço: em breve</span>
-            </>
-          )}
-        </div>
-      </section>
+      {unlocked && (
+        <section className="card flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 print:hidden">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+              <Video className="size-5" strokeWidth={1.9} aria-hidden />
+            </span>
+            <div>
+              <p className="font-semibold">Precisa de ajuda com algum talhão?</p>
+              <p className="text-[15px] text-muted-foreground">Peça um vídeo ou uma consultoria presencial à equipe KP.</p>
+            </div>
+          </div>
+          <ButtonLink to="/app/kp" variant="outline">
+            Falar com a equipe KP
+          </ButtonLink>
+        </section>
+      )}
 
       <Notice>
-        Protótipo: não há cobrança real e a ativação é apenas demonstrativa. Estimativas e projeções são indicativas, baseadas nos dados
-        registrados, e não substituem a avaliação de um profissional agrônomo.
+        Estimativas e projeções são indicativas, baseadas nos dados registrados, e não substituem a avaliação de um profissional
+        agrônomo.
       </Notice>
     </div>
   );

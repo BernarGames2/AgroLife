@@ -1,4 +1,5 @@
-import type { AppData, Field, PhotoAnalysis, Plan, Reading, Session } from "@/types";
+import type { AppData, Field, KpRequest, PhotoAnalysis, Plan, Reading, Session } from "@/types";
+import { isHttpUrl } from "@/lib/video";
 
 const DATA_KEY = "agrolife:data:v1";
 const SESSION_KEY = "agrolife:session:v1";
@@ -144,7 +145,32 @@ export function parseAppData(value: unknown): AppData | null {
     isDemo: value.isDemo === true,
     plan: PLANS.includes(value.plan as Plan) ? (value.plan as Plan) : "gratuito",
     checklist: Array.isArray(value.checklist) ? value.checklist.filter((c): c is string => typeof c === "string") : [],
+    kpRequests: Array.isArray(value.kpRequests)
+      ? value.kpRequests.map(parseKpRequest).filter((r): r is KpRequest => r !== null)
+      : [],
   };
 }
 
-const PLANS: Plan[] = ["gratuito", "premium", "plus"];
+const PLANS: Plan[] = ["gratuito", "plus", "premium"];
+
+function parseKpRequest(value: unknown): KpRequest | null {
+  if (!isObject(value)) return null;
+  if (typeof value.id !== "string" || typeof value.createdAt !== "string" || typeof value.message !== "string") return null;
+  if (value.type !== "video" && value.type !== "consultoria") return null;
+  const videoUrl = optionalString(value.videoUrl);
+  const photo = optionalString(value.photo);
+  return {
+    id: value.id,
+    type: value.type,
+    createdAt: value.createdAt,
+    fieldId: optionalString(value.fieldId),
+    message: value.message,
+    photo: photo?.startsWith("data:image/") ? photo : undefined,
+    phone: optionalString(value.phone),
+    preferredPeriod: optionalString(value.preferredPeriod),
+    sentAt: optionalString(value.sentAt),
+    videoUrl: videoUrl && isHttpUrl(videoUrl) ? videoUrl : undefined,
+    scheduledFor: optionalString(value.scheduledFor),
+    completedAt: optionalString(value.completedAt),
+  };
+}

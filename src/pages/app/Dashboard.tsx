@@ -15,6 +15,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Form";
 
 const SHORTCUTS = MORE_ITEMS.filter((i) => i.to !== "/app/perfil");
+const HIGHLIGHT = "/app/planos";
 
 export default function Dashboard() {
   const { data } = useAppStore();
@@ -108,19 +109,19 @@ export default function Dashboard() {
             <h2 id="ferramentas" className="text-[1.65rem] font-bold leading-tight">
               Ferramentas
             </h2>
-            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            <ul className="grid grid-cols-4 gap-2 sm:gap-3">
               {SHORTCUTS.map(({ to, label, icon: Icon }) => (
                 <li key={to}>
                   <Link
                     to={to}
                     className={
-                      to === "/app/premium"
-                        ? "flex h-full flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-[hsl(140_42%_26%)] to-[hsl(122_38%_42%)] px-2 py-4 text-center text-sm font-medium text-white shadow-card"
-                        : "card flex h-full flex-col items-center gap-2 rounded-2xl px-2 py-4 text-center text-sm font-medium"
+                      to === HIGHLIGHT
+                        ? "flex h-full flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-[hsl(140_42%_26%)] to-[hsl(122_38%_42%)] px-1 py-3.5 text-center text-[13px] font-medium leading-tight text-white shadow-card sm:text-sm"
+                        : "card flex h-full flex-col items-center gap-2 rounded-2xl px-1 py-3.5 text-center text-[13px] font-medium leading-tight sm:text-sm"
                     }
                   >
-                    <Icon className={to === "/app/premium" ? "size-6" : "size-6 text-primary"} strokeWidth={1.8} aria-hidden />
-                    {to === "/app/premium" ? "Premium" : label}
+                    <Icon className={to === HIGHLIGHT ? "size-6" : "size-6 text-primary"} strokeWidth={1.8} aria-hidden />
+                    {to === "/app/premium" ? "Análises" : label}
                   </Link>
                 </li>
               ))}

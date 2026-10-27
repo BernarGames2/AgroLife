@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes } from "react";
 import { Link, type LinkProps } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -47,4 +47,14 @@ interface ButtonLinkProps extends LinkProps {
 
 export function ButtonLink({ variant, size, className, ...props }: ButtonLinkProps) {
   return <Link className={buttonClass(variant, size, className)} {...props} />;
+}
+
+interface ButtonAnchorProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+  variant?: Variant;
+  size?: Size;
+}
+
+/** Link externo com aparência de botão. */
+export function ButtonAnchor({ variant, size, className, ...props }: ButtonAnchorProps) {
+  return <a className={buttonClass(variant, size, className)} {...props} />;
 }

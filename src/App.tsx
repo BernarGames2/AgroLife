@@ -27,6 +27,8 @@ const Compare = lazy(() => import("@/pages/app/Compare"));
 const Reports = lazy(() => import("@/pages/app/Reports"));
 const Academy = lazy(() => import("@/pages/app/Academy"));
 const Premium = lazy(() => import("@/pages/app/Premium"));
+const AppPlans = lazy(() => import("@/pages/app/AppPlans"));
+const KpTeam = lazy(() => import("@/pages/app/KpTeam"));
 
 function PageLoader() {
   return (
@@ -72,6 +74,8 @@ export default function App() {
                 <Route path="relatorios" element={<Reports />} />
                 <Route path="academy" element={<Academy />} />
                 <Route path="premium" element={<Premium />} />
+                <Route path="planos" element={<AppPlans />} />
+                <Route path="kp" element={<KpTeam />} />
                 <Route path="*" element={<NotFound inApp />} />
               </Route>
               <Route path="*" element={<NotFound />} />
