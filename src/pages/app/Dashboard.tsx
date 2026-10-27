@@ -10,8 +10,11 @@ import { FieldCard } from "@/components/FieldCard";
 import { AlertCard } from "@/components/AlertCard";
 import { EmergenceChart } from "@/components/EmergenceChart";
 import { EmptyState } from "@/components/EmptyState";
+import { MORE_ITEMS } from "@/lib/navigation";
 import { ButtonLink } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Form";
+
+const SHORTCUTS = MORE_ITEMS.filter((i) => i.to !== "/app/perfil");
 
 export default function Dashboard() {
   const { data } = useAppStore();
@@ -95,8 +98,34 @@ export default function Dashboard() {
               <div className="mt-5">
                 <EmergenceChart field={chartField} />
               </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Linha tracejada: meta de emergência cadastrada ({Math.round(chartField.targetEmergence)}%).
+              </p>
             </section>
           )}
+
+          <section className="space-y-4" aria-labelledby="ferramentas">
+            <h2 id="ferramentas" className="text-[1.65rem] font-bold leading-tight">
+              Ferramentas
+            </h2>
+            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+              {SHORTCUTS.map(({ to, label, icon: Icon }) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className={
+                      to === "/app/premium"
+                        ? "flex h-full flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-[hsl(140_42%_26%)] to-[hsl(122_38%_42%)] px-2 py-4 text-center text-sm font-medium text-white shadow-card"
+                        : "card flex h-full flex-col items-center gap-2 rounded-2xl px-2 py-4 text-center text-sm font-medium"
+                    }
+                  >
+                    <Icon className={to === "/app/premium" ? "size-6" : "size-6 text-primary"} strokeWidth={1.8} aria-hidden />
+                    {to === "/app/premium" ? "Premium" : label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
 
           <section className="space-y-5">
             <SectionTitle title="Seus talhões" subtitle="Do dado à decisão, do plantio ao estabelecimento." />

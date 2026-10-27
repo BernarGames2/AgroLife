@@ -1,24 +1,18 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Suspense, useEffect, useMemo } from "react";
-import { Bell, Camera, LayoutDashboard, Loader2, LogOut, Sprout, UserRound, type LucideIcon } from "lucide-react";
+import { Bell, Camera, LayoutDashboard, Loader2, LogOut, Menu, Sprout, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { buildAlerts, isActionable } from "@/lib/agro";
+import { MORE_ITEMS, NAV_ITEMS } from "@/lib/navigation";
 import { useAppStore } from "@/store/AppStore";
 import { cn } from "@/lib/utils";
 
-interface NavItem {
-  to: string;
-  label: string;
-  icon: LucideIcon;
-  end?: boolean;
-}
-
-const NAV: NavItem[] = [
+const BOTTOM: Array<{ to: string; label: string; icon: LucideIcon; end?: boolean }> = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/app/talhoes", label: "Talhões", icon: Sprout },
   { to: "/app/analisar", label: "Analisar", icon: Camera },
   { to: "/app/alertas", label: "Alertas", icon: Bell },
-  { to: "/app/perfil", label: "Perfil", icon: UserRound },
+  { to: "/app/mais", label: "Mais", icon: Menu },
 ];
 
 function CountBadge({ count, className }: { count: number; className?: string }) {
@@ -40,6 +34,8 @@ export function AppLayout() {
   const { data, signOut } = useAppStore();
   const { pathname } = useLocation();
   const alertCount = useMemo(() => buildAlerts(data.fields).filter((a) => isActionable(a.level)).length, [data.fields]);
+  // "Mais" fica ativo também nas seções que só aparecem dentro dele.
+  const inMore = pathname === "/app/mais" || MORE_ITEMS.some((i) => pathname.startsWith(i.to));
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -48,17 +44,20 @@ export function AppLayout() {
   return (
     <div className="min-h-dvh md:flex">
       {/* Menu lateral (telas maiores) */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r bg-card/60 px-4 py-6 md:flex">
-        <Logo to="/app" className="px-2" />
-        <nav className="mt-8 flex flex-col gap-1" aria-label="Navegação principal">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col overflow-y-auto border-r bg-card/60 px-4 py-6 print:hidden md:flex">
+        <div className="px-2">
+          <Logo to="/app" />
+          <p className="mt-2 text-xs text-muted-foreground">Do início bem feito, ao lucro perfeito.</p>
+        </div>
+        <nav className="mt-6 flex flex-col gap-0.5" aria-label="Navegação principal">
+          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-medium transition-colors",
+                  "flex items-center gap-3 whitespace-nowrap rounded-2xl px-4 py-2.5 text-[15px] font-medium transition-colors",
                   isActive ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )
               }
@@ -66,10 +65,13 @@ export function AppLayout() {
               <Icon className="size-5" strokeWidth={1.9} aria-hidden />
               {label}
               {to === "/app/alertas" && <CountBadge count={alertCount} className="ml-auto" />}
+              {to === "/app/premium" && data.plan !== "gratuito" && (
+                <span className="ml-auto size-2.5 shrink-0 rounded-full bg-primary" title="Plano ativo" aria-label="plano ativo" />
+              )}
             </NavLink>
           ))}
         </nav>
-        <div className="mt-auto space-y-3 px-2">
+        <div className="mt-auto space-y-3 px-2 pt-6">
           <p className="text-sm leading-snug text-muted-foreground">
             {data.profile.property || "Minha propriedade"}
             {data.isDemo && <span className="block text-xs">Dados de demonstração</span>}
@@ -80,8 +82,8 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <main className="pb-nav pt-safe min-w-0 flex-1 md:pb-12">
-        <div className="mx-auto w-full max-w-3xl px-5 pt-8 sm:px-8 md:pt-10">
+      <main className="pb-nav pt-safe min-w-0 flex-1 md:pb-12 print:p-0">
+        <div className="mx-auto w-full max-w-3xl px-5 pt-8 sm:px-8 md:pt-10 print:max-w-none print:p-0">
           <Suspense
             fallback={
               <div className="grid min-h-[50vh] place-items-center text-muted-foreground" role="status" aria-label="Carregando">
@@ -97,10 +99,10 @@ export function AppLayout() {
       {/* Barra inferior (celular) */}
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-40 border-t bg-[hsl(72_30%_98%)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t bg-[hsl(72_30%_98%)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md print:hidden md:hidden"
       >
         <ul className="mx-auto grid h-[var(--nav-height)] max-w-lg grid-cols-5">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {BOTTOM.map(({ to, label, icon: Icon, end }) => (
             <li key={to}>
               <NavLink
                 to={to}
@@ -108,7 +110,7 @@ export function AppLayout() {
                 className={({ isActive }) =>
                   cn(
                     "flex h-full flex-col items-center justify-center gap-1 text-[13px] transition-colors",
-                    isActive ? "font-medium text-primary" : "text-muted-foreground",
+                    isActive || (to === "/app/mais" && inMore) ? "font-medium text-primary" : "text-muted-foreground",
                   )
                 }
               >

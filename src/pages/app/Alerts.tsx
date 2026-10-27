@@ -28,7 +28,7 @@ export default function Alerts() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Alertas" subtitle="Pontos de atenção gerados a partir das avaliações registradas." />
+      <PageHeader title="Alertas" subtitle="Indicadores que merecem sua atenção hoje." />
 
       {alerts.length === 0 ? (
         <EmptyState

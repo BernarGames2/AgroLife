@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { Download, LogOut, RotateCcw, Upload } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronRight, Crown, Download, LogOut, RotateCcw, Upload } from "lucide-react";
 import type { Profile as ProfileData } from "@/types";
 import { parseAppData } from "@/lib/storage";
 import { plural, toDateInputValue } from "@/lib/format";
@@ -88,6 +88,21 @@ export default function Profile() {
           </Button>
         </form>
       </Card>
+
+      <Link to="/app/premium" className="card flex items-center gap-4 p-5 hover:bg-muted/40">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <Crown className="size-6" strokeWidth={1.8} aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm text-muted-foreground">Plano atual</span>
+          <span className="block text-lg font-semibold">
+            {data.plan === "plus" ? "Premium Plus (demonstração)" : data.plan === "premium" ? "Premium (demonstração)" : "Gratuito"}
+          </span>
+        </span>
+        <span className="flex items-center gap-1 text-sm font-medium text-primary">
+          {data.plan === "gratuito" ? "Ver Premium e Plus" : "Gerenciar"} <ChevronRight className="size-4" aria-hidden />
+        </span>
+      </Link>
 
       <Card className="space-y-5 p-6 sm:p-8">
         <h2 className="text-2xl font-bold">Configurações</h2>

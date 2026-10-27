@@ -106,6 +106,15 @@
   }
 }
 
+@media print {
+  body {
+    background: white;
+  }
+  .card {
+    box-shadow: none;
+  }
+}
+
 @layer utilities {
   .tabular {
     font-variant-numeric: tabular-nums;

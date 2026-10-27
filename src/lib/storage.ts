@@ -1,4 +1,4 @@
-import type { AppData, Field, PhotoAnalysis, Reading, Session } from "@/types";
+import type { AppData, Field, PhotoAnalysis, Plan, Reading, Session } from "@/types";
 
 const DATA_KEY = "agrolife:data:v1";
 const SESSION_KEY = "agrolife:session:v1";
@@ -142,5 +142,9 @@ export function parseAppData(value: unknown): AppData | null {
       ? value.analyses.map(parseAnalysis).filter((a): a is PhotoAnalysis => a !== null)
       : [],
     isDemo: value.isDemo === true,
+    plan: PLANS.includes(value.plan as Plan) ? (value.plan as Plan) : "gratuito",
+    checklist: Array.isArray(value.checklist) ? value.checklist.filter((c): c is string => typeof c === "string") : [],
   };
 }
+
+const PLANS: Plan[] = ["gratuito", "premium", "plus"];

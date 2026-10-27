@@ -27,6 +27,15 @@ describe("parseAppData", () => {
   });
 });
 
+describe("plano e checklist", () => {
+  it("usa o plano gratuito quando o arquivo não informa ou é inválido", () => {
+    const base = { version: 1, profile: {}, fields: [] };
+    expect(parseAppData(base)?.plan).toBe("gratuito");
+    expect(parseAppData({ ...base, plan: "ouro" })?.plan).toBe("gratuito");
+    expect(parseAppData({ ...base, plan: "plus", checklist: ["umidade", 3] })).toMatchObject({ plan: "plus", checklist: ["umidade"] });
+  });
+});
+
 describe("safeInternalPath", () => {
   it("só permite caminhos internos", () => {
     expect(safeInternalPath("/app/talhoes")).toBe("/app/talhoes");

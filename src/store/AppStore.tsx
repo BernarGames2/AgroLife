@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AppData, Field, FieldInput, PhotoAnalysis, Profile, Reading, Session } from "@/types";
+import type { AppData, Field, FieldInput, PhotoAnalysis, Plan, Profile, Reading, Session } from "@/types";
 import { createDemoData, createEmptyData, DEMO_EMAIL, DEMO_PROFILE } from "@/lib/demo";
 import { loadData, loadSession, saveData, saveSession } from "@/lib/storage";
 import { createId } from "@/lib/utils";
@@ -30,6 +30,9 @@ interface AppStore {
   deleteAnalysis: (id: string) => void;
   restoreDemo: () => void;
   replaceData: (data: AppData) => void;
+  setPlan: (plan: Plan) => void;
+  toggleChecklistItem: (id: string) => void;
+  resetChecklist: () => void;
 }
 
 const AppStoreContext = createContext<AppStore | null>(null);
@@ -100,8 +103,16 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       addAnalysis: (analysis) =>
         setData((d) => ({ ...d, analyses: [{ ...analysis, id: createId() }, ...d.analyses].slice(0, 30) })),
       deleteAnalysis: (id) => setData((d) => ({ ...d, analyses: d.analyses.filter((a) => a.id !== id) })),
-      restoreDemo: () => setData((d) => ({ ...createDemoData(), profile: d.isDemo ? DEMO_PROFILE : d.profile })),
+      restoreDemo: () =>
+        setData((d) => ({ ...createDemoData(), profile: d.isDemo ? DEMO_PROFILE : d.profile, plan: d.plan, checklist: d.checklist })),
       replaceData: (next) => setData(next),
+      setPlan: (plan) => setData((d) => ({ ...d, plan })),
+      toggleChecklistItem: (id) =>
+        setData((d) => ({
+          ...d,
+          checklist: d.checklist.includes(id) ? d.checklist.filter((c) => c !== id) : [...d.checklist, id],
+        })),
+      resetChecklist: () => setData((d) => ({ ...d, checklist: [] })),
     }),
     [data, session, persisted, startSession, updateFields],
   );

@@ -20,7 +20,26 @@ Protótipo em fase de validação: não há servidor. Os dados ficam no navegado
 | **Registrar avaliação** | Contagem de plantas em vários pontos da linha (calcula emergência e variação entre pontos) ou percentual direto. |
 | **Analisar** (`/app/analisar`) | Foto da lavoura → cobertura verde estimada, uniformidade e áreas com baixa cobertura destacadas. |
 | **Alertas** (`/app/alertas`) | Todos os pontos de atenção, filtráveis por gravidade. |
-| **Perfil** (`/app/perfil`) | Dados do produtor, exportar/importar dados, restaurar demonstração e sair. |
+| **Mapa** (`/app/mapa`) | Mapa ilustrativo da propriedade: blocos proporcionais à área, coloridos pelo status. |
+| **Checklist** (`/app/checklist`) | Checklist de plantio com 8 itens e progresso salvo. |
+| **Comparar** (`/app/comparar`) | Evolução da emergência por dias após o plantio e tabela de indicadores lado a lado. |
+| **Relatórios** (`/app/relatorios`) | Relatório por talhão para imprimir/salvar em PDF ou compartilhar o resumo (WhatsApp, e-mail). |
+| **Academy** (`/app/academy`) | Conteúdos curtos por etapa: antes, durante e após o plantio e monitoramento. |
+| **Premium e Plus** (`/app/premium`) | Ativação em modo de demonstração dos recursos avançados e do acompanhamento presencial. |
+| **Perfil** (`/app/perfil`) | Dados do produtor, plano atual, exportar/importar dados, restaurar demonstração e sair. |
+| **Mais** (`/app/mais`) | No celular, reúne todas as seções que não cabem na barra inferior. |
+
+No computador, todas as seções ficam no menu lateral. No celular, a barra inferior mostra Dashboard, Talhões, Analisar, Alertas e **Mais**, que dá acesso ao restante.
+
+### Planos
+
+| Plano | Recursos |
+| --- | --- |
+| **Gratuito** | Tudo o que está descrito acima. |
+| **Premium** | Plano de correção do solo, estimativa de falhas e replantio, tendência da emergência (2 dias), prioridade de vistoria, cronograma de ações e relatório Premium. |
+| **Premium Plus** | Tudo do Premium + acompanhamento presencial da equipe KP (visitas, avaliação de estande e solo, apoio na regulagem, relatório da visita). |
+
+Os preços do Premium e do Premium Plus ainda não foram definidos. No protótipo, a ativação é apenas demonstrativa (`src/lib/premium.ts`).
 
 ### Regras de classificação
 
@@ -83,6 +102,9 @@ src/
   components/      componentes de interface (layouts, cartões, gráfico, ui/)
   lib/
     agro.ts        status, alertas e cálculos agronômicos
+    premium.ts     recursos do plano Premium
+    content.ts     checklist de plantio e artigos do Academy
+    treemap.ts     layout do mapa ilustrativo
     demo.ts        dados de demonstração (Fazenda Horizonte)
     imageAnalysis.ts  análise de cobertura verde por foto
     storage.ts     persistência e validação de dados importados

@@ -20,6 +20,13 @@ const ReadingForm = lazy(() => import("@/pages/app/ReadingForm"));
 const Analyze = lazy(() => import("@/pages/app/Analyze"));
 const Alerts = lazy(() => import("@/pages/app/Alerts"));
 const Profile = lazy(() => import("@/pages/app/Profile"));
+const More = lazy(() => import("@/pages/app/More"));
+const MapPage = lazy(() => import("@/pages/app/MapPage"));
+const Checklist = lazy(() => import("@/pages/app/Checklist"));
+const Compare = lazy(() => import("@/pages/app/Compare"));
+const Reports = lazy(() => import("@/pages/app/Reports"));
+const Academy = lazy(() => import("@/pages/app/Academy"));
+const Premium = lazy(() => import("@/pages/app/Premium"));
 
 function PageLoader() {
   return (
@@ -58,6 +65,13 @@ export default function App() {
                 <Route path="analisar" element={<Analyze />} />
                 <Route path="alertas" element={<Alerts />} />
                 <Route path="perfil" element={<Profile />} />
+                <Route path="mais" element={<More />} />
+                <Route path="mapa" element={<MapPage />} />
+                <Route path="checklist" element={<Checklist />} />
+                <Route path="comparar" element={<Compare />} />
+                <Route path="relatorios" element={<Reports />} />
+                <Route path="academy" element={<Academy />} />
+                <Route path="premium" element={<Premium />} />
                 <Route path="*" element={<NotFound inApp />} />
               </Route>
               <Route path="*" element={<NotFound />} />

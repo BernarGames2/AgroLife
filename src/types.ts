@@ -67,6 +67,8 @@ export interface PhotoAnalysis {
   notes?: string;
 }
 
+export type Plan = "gratuito" | "premium" | "plus";
+
 export interface AppData {
   version: 1;
   profile: Profile;
@@ -74,4 +76,8 @@ export interface AppData {
   analyses: PhotoAnalysis[];
   /** Indica que os dados atuais são de demonstração. */
   isDemo: boolean;
+  /** Plano ativo (no protótipo, a ativação é apenas demonstrativa). */
+  plan: Plan;
+  /** Itens marcados no checklist de plantio. */
+  checklist: string[];
 }

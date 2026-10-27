@@ -120,9 +120,11 @@ export function createDemoData(now: Date = new Date(), profile: Profile = DEMO_P
     fields: createDemoFields(now),
     analyses: [],
     isDemo: true,
+    plan: "gratuito",
+    checklist: [],
   };
 }
 
 export function createEmptyData(profile: Profile): AppData {
-  return { version: 1, profile: { ...profile }, fields: [], analyses: [], isDemo: false };
+  return { version: 1, profile: { ...profile }, fields: [], analyses: [], isDemo: false, plan: "gratuito", checklist: [] };
 }
